@@ -9,9 +9,11 @@ from datetime import datetime
 import pandas as pd
 import prefect
 from prefect import Flow, task
+from prefect.environments import LocalEnvironment
 from prefect.tasks.aws.s3 import S3Upload
 from prefect.core.parameter import Parameter
 from prefect.engine.results import LocalResult
+from prefect.engine.executors import LocalDaskExecutor
 
 DEFAULT_BUCKET = "ludwigm-bucket"
 DEFAULT_COUNTRY = "Germany"
@@ -31,13 +33,14 @@ def download_data() -> pd.DataFrame:
 def filter_data(covid_df: pd.DataFrame, country: str) -> pd.DataFrame:
     logger = prefect.context.get("logger")
     logger.info(f"Filtering data for country: {country}")
-    return covid_df[covid_df.countriesAndTerritories == country]
+    return covid_df[covid_df.countriesAndTerritories == country].copy()
 
 
 @task
 def enrich_data(covid_df: pd.DataFrame) -> pd.DataFrame:
-    covid_df["year_month"] = covid_df["year"] + "_" + covid_df["month"]
-    return covid_df
+    enriched_df = covid_df.copy()
+    enriched_df["year_month"] = enriched_df["year"] + "_" + enriched_df["month"]
+    return enriched_df
 
 
 @task
@@ -67,7 +70,9 @@ upload_to_s3 = S3Upload()
 
 
 def create_flow():
-    with Flow(FLOW_NAME) as flow:
+    local_parallelizing_environment = LocalEnvironment(executor=LocalDaskExecutor())
+
+    with Flow(FLOW_NAME, environment=local_parallelizing_environment) as flow:
         country = Parameter("country", default=DEFAULT_COUNTRY)
         bucket = Parameter("bucket", default=DEFAULT_BUCKET)
         covid_df = download_data()
