@@ -59,3 +59,7 @@ def register_flow():
 def start_agent():
     flow = create_flow()
     flow.run_agent(show_flow_logs=True)
+
+
+if __name__ == "__main__":
+    main()
