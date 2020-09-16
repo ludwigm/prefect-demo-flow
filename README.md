@@ -1,6 +1,6 @@
 # Prefect demo flow
 
-This is the code accompanying the blog article TODO. It defines a Prefect flow which can be visualized, run locally or registers in Prefect cloud.
+This is the code accompanying the blog [article](https://makeitnew.io/prefect-a-modern-python-native-data-workflow-engine-7ece02ceb396). It defines a Prefect flow which can be visualized, run locally or registers in Prefect cloud.
 
 The input data are OpenData for COVID and the output an monthly aggregated CSV in S3 for a specific country.
 
